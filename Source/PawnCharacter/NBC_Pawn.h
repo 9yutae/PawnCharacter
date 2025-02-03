@@ -7,6 +7,7 @@
 class UCapsuleComponent;
 class USpringArmComponent;
 class UCameraComponent;
+struct FInputActionValue;
 
 UCLASS()
 class PAWNCHARACTER_API ANBC_Pawn : public APawn
@@ -35,8 +36,37 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
+	// 입력 바인딩을 처리할 함수 (IA 함수 연결)
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// IA 함수를 처리할 함수 원형
+	// Enhanced Input에서 액션 값은 FInputActionValue로 전달된다.
+	UFUNCTION()
+	void MoveForward(const FInputActionValue& value);
+	UFUNCTION()
+	void MoveRight(const FInputActionValue& value);
+	UFUNCTION()
+	void Look(const FInputActionValue& value);
+
+#ifdef JUMPING
+	void StartJump(const FInputActionValue& value);
+	void StopJump(const FInputActionValue& value);
+#endif
+
+#ifdef SPRINT
+	void StartSprint(const FInputActionValue& value);
+	void StopSprint(const FInputActionValue& value);
+#endif
+
+public:	
+	virtual void Tick(float DeltaTime) override;
+	FVector GetVelocity();
+	void UpdateMovementSpeed();
+
+private:
+	float NormalSpeed;
+	float RotationSensitivity;
+	float SprintSpeedMultiplier;
+	float SprintSpeed;
+	FVector PreviousLocation;
 };

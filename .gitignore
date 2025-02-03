@@ -505,20 +505,3 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/unrealengine,visualstudio,c++
-
-
-
-# Visual Studio 폴더
-.vs/
-
-# Intermediate 폴더
-Intermediate/
-
-# Binaries 폴더
-Binaries/
-
-# 대형 파일들을 명시적으로 무시하기
-*.pdb
-*.obj
-*.pch
-*.db
