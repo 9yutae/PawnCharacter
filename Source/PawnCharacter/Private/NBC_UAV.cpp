@@ -1,4 +1,4 @@
-#include "NBC_UAV.h"
+ï»¿#include "NBC_UAV.h"
 #include "NBC_UAVController.h"
 #include "EnhancedInputComponent.h"
 #include "Components/BoxComponent.h"
@@ -9,59 +9,61 @@ ANBC_UAV::ANBC_UAV()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Box º¯¼ö ÃÊ±âÈ­
+	// Box ë³€ìˆ˜ ì´ˆê¸°í™”
 	Box = CreateDefaultSubobject<UBoxComponent>(TEXT("RootCapsule"));
 	Box->SetBoxExtent(FVector(100.f, 100.f, 25.f));
 
-	// ·çÆ® ÄÄÆ÷³ÍÆ® ¼³Á¤
+	// ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ ì„¤ì •
 	SetRootComponent(Box);
 
-	// ½ºÅÂÆ½ ¸Ş½Ã ÄÄÆ÷³ÍÆ®
+	// ìŠ¤íƒœí‹± ë©”ì‹œ ì»´í¬ë„ŒíŠ¸
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	StaticMeshComp->SetupAttachment(Box);
 
-	// ½ºÅÂÆ½ ¸Ş½Ã ÄÄÆ÷³ÍÆ® ¾Ö¼Â ¼³Á¤
+	// ìŠ¤íƒœí‹± ë©”ì‹œ ì»´í¬ë„ŒíŠ¸ ì• ì…‹ ì„¤ì •
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Game/Fab/White_Drone/white_drone.white_drone"));
 	if (MeshAsset.Succeeded())
 	{
 		StaticMeshComp->SetStaticMesh(MeshAsset.Object);
 	}
 
-	// ¸Ó¸®Æ¼¾ó ¼³Á¤
+	// ë¨¸ë¦¬í‹°ì–¼ ì„¤ì •
 	static ConstructorHelpers::FObjectFinder<UMaterial> MaterialAsset(TEXT("/Game/Fab/White_Drone/Scene_-_Root.Scene_-_Root"));
 	if (MaterialAsset.Succeeded())
 	{
 		StaticMeshComp->SetMaterial(0, MaterialAsset.Object);
 	}
 
-	// ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ ÇÒ´ç
+	// ì»´í¬ë„ŒíŠ¸ í¬ì¸í„° í• ë‹¹
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	// Root¿¡ SpringArm ºÎÂø
+	// Rootì— SpringArm ë¶€ì°©
 	SpringArmComp->SetupAttachment(RootComponent);
-	SpringArmComp->TargetArmLength = 350.0f; // ½ºÇÁ¸µ¾ÏÀÇ ±æÀÌ
+	SpringArmComp->TargetArmLength = 350.0f; // ìŠ¤í”„ë§ì•”ì˜ ê¸¸ì´
 	SpringArmComp->bUsePawnControlRotation = false;
 
-	// Ä«¸Ş¶ó À§Ä¡ Á¶Á¤
+	// ì¹´ë©”ë¼ ìœ„ì¹˜ ì¡°ì •
 	SpringArmComp->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
 	SpringArmComp->SocketOffset = FVector(0.0f, 0.0f, 50.0f);
 
-	// ÄÁÆ®·Ñ·¯ÀÇ Yaw °ªÀ» Pawn¿¡ ¹İ¿µ
+	// ì»¨íŠ¸ë¡¤ëŸ¬ì˜ Yaw, Pitch, Roll ê°’ì„ Pawnì— ë°˜ì˜
 	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = true;
 
-	// ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ ÇÒ´ç
+	// ì»´í¬ë„ŒíŠ¸ í¬ì¸í„° í• ë‹¹
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetWorldRotation(FRotator(0.f, -10.f, 0.f));
-	// Camera´Â SpringArm¿¡ ºÎÂø
-	// µÎ ¹øÂ° ÀÎÀÚ·Î ÇØ´ç ÄÄÆ÷³ÍÆ®ÀÇ Æ¯Á¤ ¼ÒÄÏ ÁöÁ¤ °¡´É
-	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName); // SocketName = SpringArmÀÇ ³¡ ºÎºĞ
-	CameraComp->bUsePawnControlRotation = false; // ½ºÇÁ¸µ¾Ï¸¸ È¸Àü, Ä«¸Ş¶ó´Â °íÁ¤
+	// CameraëŠ” SpringArmì— ë¶€ì°©
+	// ë‘ ë²ˆì§¸ ì¸ìë¡œ í•´ë‹¹ ì»´í¬ë„ŒíŠ¸ì˜ íŠ¹ì • ì†Œì¼“ ì§€ì • ê°€ëŠ¥
+	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName); // SocketName = SpringArmì˜ ë ë¶€ë¶„
+	CameraComp->bUsePawnControlRotation = false; // ìŠ¤í”„ë§ì•”ë§Œ íšŒì „, ì¹´ë©”ë¼ëŠ” ê³ ì •
 
-	// ±âº» ¼Óµµ ÃÊ±âÈ­
+	// ì´ˆê¸° ê°’ ì„¤ì •
 	CurrentVelocity = FVector::ZeroVector;
-	CurrentRotationSpeed = FRotator::ZeroRotator;
 	MaxSpeed = 1000.f;
 	RotationSensitivity = 1.2f;
-
+	bResetTiltRequested = false;
+	isHovering = false;
+	TerminalSpeed = sqrt(AirResistance * Gravity * GetActorScale().Z);
 }
 
 void ANBC_UAV::BeginPlay()
@@ -74,58 +76,94 @@ void ANBC_UAV::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// À§Ä¡ ÀÌµ¿ Àû¿ë
-	if (!CurrentVelocity.IsZero())
+	// ì´ë™ ì¤‘ì´ ì•„ë‹ ë•ŒëŠ” ë“œë¡ ì˜ Roll, Yaw 0ìœ¼ë¡œ ë˜ëŒë¦¬ê¸°
+	if (CurrentVelocity.IsNearlyZero())
 	{
-		FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
-		SetActorLocation(NewLocation);
+		FRotator NewRotation = StaticMeshComp->GetRelativeRotation();
+
+		// Rollê³¼ Pitchë¥¼ 0ìœ¼ë¡œ ì ì§„ì ìœ¼ë¡œ ë³´ê°„
+		NewRotation.Yaw = FMath::FInterpTo(NewRotation.Yaw, 0.0f, DeltaTime, 1.5f);
+		NewRotation.Pitch = FMath::FInterpTo(NewRotation.Pitch, 0.0f, DeltaTime, 1.5f);
+		NewRotation.Roll = FMath::FInterpTo(NewRotation.Roll, 0.0f, DeltaTime, 1.5f);		
+
+		StaticMeshComp->SetRelativeRotation(NewRotation);
 	}
 
-	// È¸Àü Àû¿ë
-	if (!CurrentRotationSpeed.IsZero())
+	// Tilt ì› ìœ„ì¹˜ (Q, E Completed)
+	if (bResetTiltRequested)
 	{
-		FRotator NewRotation = GetActorRotation() + (CurrentRotationSpeed * DeltaTime);
-		SetActorRotation(NewRotation);
+		FRotator NewControlRotation = Controller->GetControlRotation();
+		NewControlRotation.Roll = FMath::FInterpTo(NewControlRotation.Roll, 0.f, GetWorld()->GetDeltaSeconds(), 3.0f);
+
+		if (FMath::IsNearlyZero(NewControlRotation.Roll))
+		{
+			NewControlRotation.Roll = 0.f;
+			bResetTiltRequested = false;
+		}
+
+		// ControlRotation ì ìš©
+		Controller->SetControlRotation(NewControlRotation);
 	}
+
+	// Hí‚¤ ì…ë ¥ ì‹œ Hovering
+	/*
+	if (!isHovering)
+	{
+	}
+	*/
 }
 
 void ANBC_UAV::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// EnhancedInputComponent Ä³½ºÆÃ
+	// EnhancedInputComponent ìºìŠ¤íŒ…
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// ÇöÀç Ä³¸¯ÅÍ¸¦ Á¶ÀÛÇÏ´Â GetController()¸¦ °¡Á®¿Í
-		// Á÷Á¢ ±¸ÇöÇÑ PlayerController Å¬·¡½º·Î Ä³½ºÆÃ
+		// í˜„ì¬ ìºë¦­í„°ë¥¼ ì¡°ì‘í•˜ëŠ” GetController()ë¥¼ ê°€ì ¸ì™€
+		// ì§ì ‘ êµ¬í˜„í•œ PlayerController í´ë˜ìŠ¤ë¡œ ìºìŠ¤íŒ…
 		if (ANBC_UAVController* PlayerController = Cast<ANBC_UAVController>(GetController()))
 		{
-			// PlayerControlloerÀÇ MoveAction °¡Á®¿À±â
+			// PlayerControlloerì˜ MoveAction ê°€ì ¸ì˜¤ê¸°
 			if (PlayerController->MoveAction)
 			{
-				// Input Action ¹ÙÀÎµù (ÀÌº¥Æ®¿Í ÇÔ¼ö ¿¬°áÇÏ´Â ÇÙ½É ÄÚµå)
+				// Input Action ë°”ì¸ë”© (ì´ë²¤íŠ¸ì™€ í•¨ìˆ˜ ì—°ê²°í•˜ëŠ” í•µì‹¬ ì½”ë“œ)
 				EnhancedInput->BindAction(
-					PlayerController->MoveAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Triggered,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Triggered,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_UAV::MoveForward		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_UAV::MoveForward		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 
 				EnhancedInput->BindAction(
-					PlayerController->MoveAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Triggered,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Triggered,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_UAV::MoveRight		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_UAV::MoveRight		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Completed,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
+					this,
+					&ANBC_UAV::StopMove		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 			}
 			
 			if (PlayerController->UpDownAction)
 			{
 				EnhancedInput->BindAction(
-					PlayerController->UpDownAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Triggered,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->UpDownAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Triggered,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_UAV::MoveUp		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_UAV::MoveUp		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->UpDownAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Completed,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
+					this,
+					&ANBC_UAV::StopMove		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 			}
 
@@ -147,6 +185,30 @@ void ANBC_UAV::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 					this,
 					&ANBC_UAV::Tilt
 				);
+
+				EnhancedInput->BindAction(
+					PlayerController->TiltAction,
+					ETriggerEvent::Completed,
+					this,
+					&ANBC_UAV::ResetTilt
+				);
+			}
+
+			if (PlayerController->HoverAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->HoverAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANBC_UAV::StartHover
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->HoverAction,
+					ETriggerEvent::Completed,
+					this,
+					&ANBC_UAV::StopHover
+				);
 			}
 		}
 	}
@@ -156,27 +218,34 @@ void ANBC_UAV::MoveForward(const FInputActionValue& Value)
 {
 	if (!Controller) return;
 
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const FVector2D MoveInput = Value.Get<FVector2D>();
 
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		// Ä«¸Ş¶óÀÇ Forward º¤ÅÍ »ç¿ë
+		// ì¹´ë©”ë¼ì˜ Forward ë²¡í„° ì‚¬ìš©
 		FVector ForwardVector = GetActorForwardVector();
-		// Æò¸é ÀÌµ¿À» À§ÇÑ ZÃà Á¦°Å
+		// í‰ë©´ ì´ë™ì„ ìœ„í•œ Zì¶• ì œê±°
 		ForwardVector.Z = 0;
 
-		// º¤ÅÍ Á¤±ÔÈ­
+		// ë²¡í„° ì •ê·œí™”
 		ForwardVector.Normalize();
 
-		// ¿ùµå ±âÁØ º¤ÅÍ¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+		// ì›”ë“œ ê¸°ì¤€ ë²¡í„°ë¥¼ ë¡œì»¬ ì¢Œí‘œê³„ë¡œ ë³€í™˜
 		FVector LocalForward = GetActorTransform().InverseTransformVector(ForwardVector);
 
-		// ÀÌµ¿ ¹æÇâ ¼³Á¤
+		// ì´ë™ ë°©í–¥ ì„¤ì •
 		FVector Direction = (LocalForward * MoveInput.X).GetSafeNormal();
 
-		// XÃà ÀÌµ¿
-		AddActorLocalOffset(Direction * MaxSpeed * GetWorld()->GetDeltaSeconds(), true);
+		// Xì¶• ì´ë™
+		CurrentVelocity = Direction * MaxSpeed;
+		AddActorLocalOffset(CurrentVelocity * GetWorld()->GetDeltaSeconds(), true);
+
+		// ì „ì§„/í›„ì§„ ì‹œ Pitch íšŒì „ ì ìš©
+		float TargetPitch = MoveInput.X * -15.0f;
+		FRotator NewRotation = StaticMeshComp->GetRelativeRotation();
+		NewRotation.Pitch = FMath::FInterpTo(NewRotation.Pitch, TargetPitch, GetWorld()->GetDeltaSeconds(), 5.0f);
+		StaticMeshComp->SetRelativeRotation(NewRotation);
 	}
 }
 
@@ -184,92 +253,122 @@ void ANBC_UAV::MoveRight(const FInputActionValue& Value)
 {
 	if (!Controller) return;
 
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const FVector2D MoveInput = Value.Get<FVector2D>();
 
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
-		// Ä«¸Ş¶óÀÇ Right º¤ÅÍ »ç¿ë
+		// ì¹´ë©”ë¼ì˜ Right ë²¡í„° ì‚¬ìš©
 		FVector RightVector = GetActorRightVector();
-		// Æò¸é ÀÌµ¿À» À§ÇÑ ZÃà Á¦°Å
+		// í‰ë©´ ì´ë™ì„ ìœ„í•œ Zì¶• ì œê±°
 		RightVector.Z = 0;
 
-		// º¤ÅÍ Á¤±ÔÈ­
+		// ë²¡í„° ì •ê·œí™”
 		RightVector.Normalize();
 
-		// ¿ùµå ±âÁØ º¤ÅÍ¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+		// ì›”ë“œ ê¸°ì¤€ ë²¡í„°ë¥¼ ë¡œì»¬ ì¢Œí‘œê³„ë¡œ ë³€í™˜
 		FVector LocalRight = GetActorTransform().InverseTransformVector(RightVector);
 
-		// ÀÌµ¿ ¹æÇâ ¼³Á¤
+		// ì´ë™ ë°©í–¥ ì„¤ì •
 		FVector Direction = (LocalRight * MoveInput.Y).GetSafeNormal();
 
-		// YÃà ÀÌµ¿
-		AddActorLocalOffset(Direction * MaxSpeed * GetWorld()->GetDeltaSeconds(), true);
+		// Yì¶• ì´ë™
+		CurrentVelocity = Direction * MaxSpeed;
+		AddActorLocalOffset(CurrentVelocity * GetWorld()->GetDeltaSeconds(), true);
+
+		// ì¢Œìš° ì´ë™ ì‹œ Roll íšŒì „ ì ìš©
+		float TargetRoll = MoveInput.Y * 15.0f;
+		FRotator NewRotation = StaticMeshComp->GetRelativeRotation();
+		NewRotation.Roll = FMath::FInterpTo(NewRotation.Roll, TargetRoll, GetWorld()->GetDeltaSeconds(), 5.0f);
+		StaticMeshComp->SetRelativeRotation(NewRotation);
 	}
 }
 
 void ANBC_UAV::MoveUp(const FInputActionValue& Value)
 {
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const float MoveInput = Value.Get<float>();
 
 	if (!FMath::IsNearlyZero(MoveInput))
 	{
-		// Ä«¸Ş¶óÀÇ Up º¤ÅÍ »ç¿ë
+		// ì¹´ë©”ë¼ì˜ Up ë²¡í„° ì‚¬ìš©
 		FVector NormalVector = GetActorUpVector();
 
-		// º¤ÅÍ Á¤±ÔÈ­
+		// ë²¡í„° ì •ê·œí™”
 		NormalVector.Normalize();
 
-		// ¿ùµå ±âÁØ º¤ÅÍ¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+		// ì›”ë“œ ê¸°ì¤€ ë²¡í„°ë¥¼ ë¡œì»¬ ì¢Œí‘œê³„ë¡œ ë³€í™˜
 		FVector LocalForward = GetActorTransform().InverseTransformVector(NormalVector);
 
-		// ÀÌµ¿ ¹æÇâ ¼³Á¤
+		// ì´ë™ ë°©í–¥ ì„¤ì •
 		FVector Direction = (LocalForward * MoveInput).GetSafeNormal();
 
-		// ZÃà ÀÌµ¿
-		AddActorLocalOffset(Direction * MaxSpeed * GetWorld()->GetDeltaSeconds(), true);
+		// Zì¶• ì´ë™
+		CurrentVelocity = Direction * MaxSpeed;
+		AddActorLocalOffset(CurrentVelocity * GetWorld()->GetDeltaSeconds(), true);
 	}
+}
+
+void ANBC_UAV::StopMove(const FInputActionValue& Value)
+{
+	CurrentVelocity = FVector::ZeroVector;
 }
 
 void ANBC_UAV::Turn(const FInputActionValue& Value)
 {
-	// À¯È¿¼º °Ë»ç
+	// ìœ íš¨ì„± ê²€ì‚¬
 	if (!SpringArmComp && !Controller) return;
 
-	// ¸¶¿ì½º ÀÌµ¿¿¡ ÀÇÇÑ X, Y È¸Àü ÀÔ·Â °ª
+	// ë§ˆìš°ìŠ¤ ì´ë™ì— ì˜í•œ X, Y íšŒì „ ì…ë ¥ ê°’
 	FVector2D LookInput = Value.Get<FVector2D>();
 
-	// Yaw È¸Àü (ÁÂ¿ì È¸Àü) - Ä«¸Ş¶ó ¹æÇâ ±âÁØ
+	// Yaw íšŒì „ (ì¢Œìš° íšŒì „) - ì¹´ë©”ë¼ ë°©í–¥ ê¸°ì¤€
 	FRotator NewControlRotation = Controller->GetControlRotation();
 	NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
 
-	// ControlRotation Àû¿ë
+	// ControlRotation ì ìš©
 	Controller->SetControlRotation(NewControlRotation);
 
-	// Pitch È¸Àü (»óÇÏ È¸Àü) - SpringArm¿¡ Àû¿ë
+	// Pitch íšŒì „ (ìƒí•˜ íšŒì „) - SpringArmì— ì ìš©
 	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
 	SpringArmRotation.Pitch = FMath::Clamp(SpringArmRotation.Pitch - LookInput.Y * RotationSensitivity, -85.0f, 85.0f);
 
-	// SpringArm È¸Àü Àû¿ë
+	// SpringArm íšŒì „ ì ìš©
 	SpringArmComp->SetRelativeRotation(SpringArmRotation);
 }
 
 void ANBC_UAV::Tilt(const FInputActionValue& Value)
 {
-	// À¯È¿¼º °Ë»ç
+	// ìœ íš¨ì„± ê²€ì‚¬
 	if (!SpringArmComp && !Controller) return;
 
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const float LookInput = Value.Get<float>();
 
-	// Roll È¸Àü (Tilt È¸Àü) - SpringArm¿¡ Àû¿ë
-	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
-	SpringArmRotation.Roll = FMath::Clamp(SpringArmRotation.Roll + LookInput * RotationSensitivity, -45.0f, 45.0f);
+	// Roll íšŒì „ (Tilt íšŒì „) - ì¹´ë©”ë¼ ë°©í–¥ ê¸°ì¤€
+	FRotator NewControlRotation = Controller->GetControlRotation();
+	NewControlRotation.Roll = FMath::Clamp(NewControlRotation.Roll + LookInput * RotationSensitivity, -30.f, 30.f);
 
-	// SpringArm È¸Àü Àû¿ë
-	SpringArmComp->SetRelativeRotation(SpringArmRotation);
+	// ControlRotation ì ìš©
+	Controller->SetControlRotation(NewControlRotation);
+}
 
-	// ºÎµå·¯¿î Æ¿Æ® È¿°ú Àû¿ë (º¸°£)
-	SpringArmRotation.Roll = FMath::FInterpTo(SpringArmComp->GetRelativeRotation().Roll, SpringArmRotation.Roll, GetWorld()->GetDeltaSeconds(), 5.0f);
+void ANBC_UAV::ResetTilt(const FInputActionValue& Value)
+{
+	bResetTiltRequested = true;
+}
+
+void ANBC_UAV::StartHover(const FInputActionValue& Value)
+{
+	if (!Controller) return;
+
+	if (Value.Get<float>())
+	{
+		isHovering = true;
+	}
+}
+
+void ANBC_UAV::StopHover(const FInputActionValue& Value)
+{
+	isHovering = false;
 }

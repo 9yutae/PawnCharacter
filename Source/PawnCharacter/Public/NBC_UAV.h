@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
@@ -17,30 +17,30 @@ class PAWNCHARACTER_API ANBC_UAV : public APawn
 public:
 	ANBC_UAV();
 
-	// ·çÆ® ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ
+	// ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ í¬ì¸í„°
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NBC_UAV|Components")
 	UBoxComponent* Box;
 
-	// ½ºÅÂÆ½ ¸Ş½Ã ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ
+	// ìŠ¤íƒœí‹± ë©”ì‹œ ì»´í¬ë„ŒíŠ¸ í¬ì¸í„°
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NBC_UAV|Components")
 	UStaticMeshComponent* StaticMeshComp;
 
-	// ½ºÇÁ¸µ ¾Ï ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ
+	// ìŠ¤í”„ë§ ì•” ì»´í¬ë„ŒíŠ¸ í¬ì¸í„°
 	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArmComp;
 
-	// Ä«¸Ş¶ó ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ
+	// ì¹´ë©”ë¼ ì»´í¬ë„ŒíŠ¸ í¬ì¸í„°
 	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "Camera")
 	UCameraComponent* CameraComp;
 
 	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "NBC_UAV|Movement")
 	FVector CurrentVelocity;
-	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "NBC_UAV|Movement")
-	FRotator CurrentRotationSpeed;
 	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "NBC_UAV|Movement")
 	float MaxSpeed;
 	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "NBC_UAV|Movement")
 	float RotationSensitivity;
+	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "NBC_UAV|Movement")
+	float TerminalSpeed; // ì¢…ë‹¨ ì†ë„
 
 protected:
 	virtual void BeginPlay() override;
@@ -54,6 +54,15 @@ private:
 	void MoveForward(const FInputActionValue& Value);
 	void MoveRight(const FInputActionValue& Value);
 	void MoveUp(const FInputActionValue& Value);
+	void StopMove(const FInputActionValue& Value);
 	void Turn(const FInputActionValue& Value);
 	void Tilt(const FInputActionValue& Value);
+	void ResetTilt(const FInputActionValue& Value);
+	void StartHover(const FInputActionValue& Value);
+	void StopHover(const FInputActionValue& Value);
+
+	bool bResetTiltRequested;
+	bool isHovering;
+	const float Gravity = 9.8f; // ì¤‘ë ¥ ê°€ì†ë„
+	const float AirResistance = 10.67;
 };

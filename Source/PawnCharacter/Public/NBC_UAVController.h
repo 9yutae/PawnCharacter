@@ -29,7 +29,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* TiltAction;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* HoverAction;
+
 protected:
 	void BeginPlay();
 

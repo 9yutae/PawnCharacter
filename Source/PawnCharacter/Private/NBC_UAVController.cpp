@@ -6,7 +6,8 @@ ANBC_UAVController::ANBC_UAVController()
     MoveAction(nullptr),
     UpDownAction(nullptr),
     LookAction(nullptr),
-    TiltAction(nullptr)
+    TiltAction(nullptr),
+    HoverAction(nullptr)
 {
 }
 

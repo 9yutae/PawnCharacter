@@ -56,10 +56,13 @@ ANBC_Pawn::ANBC_Pawn()
 	CameraComp->bUsePawnControlRotation = false; // 스프링암만 회전, 카메라는 고정
 
 	// 멤버 변수 Initialize
-	NormalSpeed = 600.0f;
+	Acceleration = 1000.f;
+	NormalSpeed = 600.f;
+	MaxWalkSpeed = NormalSpeed;
+	CurrentPlaneSpeed = MaxWalkSpeed;
 	RotationSensitivity = 1.2f;
 	SprintSpeedMultiplier = 1.5f;
-	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
+	SprintSpeed = MaxWalkSpeed * SprintSpeedMultiplier;
 	PreviousLocation = FVector(0.0f, 0.0f, -90.0f);
 }
 
@@ -111,6 +114,13 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 					this,
 					&ANBC_Pawn::MoveRight		// 호출되는 함수
 				);
+
+				EnhancedInput->BindAction(
+					PlayerController->MoveAction,	// IA 가져오기
+					ETriggerEvent::Completed,		// 트리거 이벤트
+					this,
+					&ANBC_Pawn::StopMove		// 호출되는 함수
+				);
 			}
 
 			if (PlayerController->LookAction)
@@ -142,7 +152,6 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 			}
 #endif
 
-#ifdef SPRINT
 			if (PlayerController->SprintAction)
 			{
 				EnhancedInput->BindAction(
@@ -159,7 +168,6 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 					&ANBC_Pawn::StopSprint
 				);
 			}
-#endif
 		}
 	}
 }
@@ -173,7 +181,10 @@ void ANBC_Pawn::MoveForward(const FInputActionValue& value)
 
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		// 카메라의 Forward 벡터 사용
+		// 가속 적용: 입력에 따라 속도 증가
+		CurrentPlaneSpeed = FMath::Min(CurrentPlaneSpeed + Acceleration * GetWorld()->GetDeltaSeconds(), MaxWalkSpeed);
+
+		// Actor의 Forward 벡터 사용
 		FVector ForwardVector = GetActorForwardVector();
 		// 평면 이동을 위한 Z축 제거
 		ForwardVector.Z = 0;
@@ -186,9 +197,15 @@ void ANBC_Pawn::MoveForward(const FInputActionValue& value)
 		// 이동 방향 설정
 		FVector Direction = (LocalForward * MoveInput.X).GetSafeNormal();
 
+		// 공중에서 이동 속도 제한
+		float SpeedMultiplier = bIsInAir ? 0.4f : 1.0f;
+		CurrentPlaneSpeed *= SpeedMultiplier;
+
 		// X축 이동
-		AddActorLocalOffset(Direction * NormalSpeed * GetWorld()->GetDeltaSeconds(), true);
-		// AddActorWorldOffset(Direction * NormalSpeed * GetWorld()->GetDeltaSeconds(), true);
+		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
+		
+		// 스켈레탈 메시 회전
+		ApplyCharacterRotation(MoveInput.X * 90.0f - 90.0f);
 	}
 }
 
@@ -201,6 +218,9 @@ void ANBC_Pawn::MoveRight(const FInputActionValue& value)
 
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
+		// 가속 적용: 입력에 따라 속도 증가
+		CurrentPlaneSpeed = FMath::Min(CurrentPlaneSpeed + Acceleration * GetWorld()->GetDeltaSeconds(), MaxWalkSpeed);
+
 		// 카메라의 Right 벡터 사용
 		FVector RightVector = GetActorRightVector();
 		// 평면 이동을 위한 Z축 제거
@@ -214,10 +234,38 @@ void ANBC_Pawn::MoveRight(const FInputActionValue& value)
 		// 이동 방향 설정
 		FVector Direction = (LocalRight * MoveInput.Y).GetSafeNormal();
 
+		// 공중에서 이동 속도 제한
+		float SpeedMultiplier = bIsInAir ? 0.4f : 1.0f;
+		CurrentPlaneSpeed *= SpeedMultiplier;
+
 		// Y축 이동
-		AddActorLocalOffset(Direction * NormalSpeed * GetWorld()->GetDeltaSeconds(), true);
-		// AddActorWorldOffset(Direction * NormalSpeed * GetWorld()->GetDeltaSeconds(), true);
+		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
+
+		// 스켈레탈 메시 회전
+		ApplyCharacterRotation(MoveInput.Y * 90.0f);
 	}
+}
+
+void ANBC_Pawn::ApplyCharacterRotation(float TargetYaw)
+{
+	// 스켈레탈 메쉬 기본 방향에 맞춰 보정
+	const float BaseRotationOffset = -90.0f;
+	TargetYaw += BaseRotationOffset;
+
+	FRotator CurrentRotation = SkeletalMeshComp->GetRelativeRotation();
+
+	// 최단 회전 방향 계산
+	float DeltaYaw = FMath::UnwindDegrees(TargetYaw - CurrentRotation.Yaw);	
+	float NewYaw = FMath::FInterpTo(CurrentRotation.Yaw, CurrentRotation.Yaw + DeltaYaw, GetWorld()->GetDeltaSeconds(), 5.0f);
+
+	FRotator NewRotation = CurrentRotation;
+	NewRotation.Yaw = NewYaw;
+	SkeletalMeshComp->SetRelativeRotation(NewRotation);
+}
+
+void ANBC_Pawn::StopMove(const FInputActionValue& value)
+{
+	CurrentPlaneSpeed = 0.f;
 }
 
 void ANBC_Pawn::Look(const FInputActionValue& value)
@@ -262,28 +310,47 @@ void ANBC_Pawn::StopJump(const FInputActionValue& value)
 }
 #endif
 
-#ifdef SPRINT
 void ANBC_Pawn::StartSprint(const FInputActionValue& value)
 {
-	if (GetCharacterMovement())
+	if (value.Get<bool>())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+		MaxWalkSpeed = SprintSpeed;
 	}
 }
 
 void ANBC_Pawn::StopSprint(const FInputActionValue& value)
 {
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
-	}
+	MaxWalkSpeed = NormalSpeed;
 }
-#endif
 
 void ANBC_Pawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 중력 및 낙하 처리
+	if (!IsGrounded())
+	{
+		// 중력 적용 (Z축 속도 증가)
+		VerticalVelocity += Gravity * DeltaTime;
+
+		// 이동
+		FVector NewLocation = GetActorLocation();
+		NewLocation.Z += VerticalVelocity * DeltaTime;
+		SetActorLocation(NewLocation);
+
+		bIsInAir = true;
+	}
+	else
+	{
+		// 착지
+		if (bIsInAir)
+		{
+			VerticalVelocity = 0.f;
+			bIsInAir = false;
+		}
+	}
+
+	// 애니메이션 및 에어컨트롤
 	UpdateMovementSpeed();
 }
 
@@ -301,8 +368,8 @@ FVector ANBC_Pawn::GetVelocity()
 void ANBC_Pawn::UpdateMovementSpeed()
 {
 	// 현재 속도 가져오기
-	FVector Velocity = GetVelocity();
-	float CurrentSpeed = Velocity.Size();
+	FVector CurrentVelocity = GetVelocity();
+	float CurrentSpeed = CurrentVelocity.Size();
 
 	// 애니메이션 인스턴스 참조 가져오기
 	UAnimInstance* AnimInstance = SkeletalMeshComp->GetAnimInstance();
@@ -318,4 +385,27 @@ void ANBC_Pawn::UpdateMovementSpeed()
 			NBC_AnimInstance->IsMoving = (!FMath::IsNearlyZero(CurrentSpeed)); // 이동 중이면 true, 아니면 false
 		}
 	}
+}
+
+bool ANBC_Pawn::IsGrounded()
+{
+	// 캡슐 충돌 컴포넌트의 바닥 확인
+	FVector CapsuleBottom = Capsule->GetComponentLocation() - FVector(0.0f, 0.0f, Capsule->GetScaledCapsuleHalfHeight());
+	
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this); // 자신을 제외한 다른 오브젝트와의 충돌 체크
+
+	// Sweep 체크로 지면과의 충돌 여부 확인
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		CapsuleBottom,
+		CapsuleBottom - FVector(0.0f, 0.0f, 10.0f), // 살짝 아래로 Sweep
+		FQuat::Identity,
+		ECC_Visibility, // 충돌 채널 설정
+		FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius()), // Capsule의 반지름을 사용
+		CollisionParams
+	);
+
+	return bHit;
 }
