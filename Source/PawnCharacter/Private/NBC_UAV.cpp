@@ -109,7 +109,7 @@ void ANBC_UAV::OnUAVHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 	// 바닥이 아니라면 초기 위치로 리셋
 	if (!bIsGrounded)
 	{
-		SetActorLocation(InitialPosition);
+		// SetActorLocation(InitialPosition);
 		SetActorRotation(InitialRotation);
 		SetActorTickEnabled(true); // 다시 활성화
 	}

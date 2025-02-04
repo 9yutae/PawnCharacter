@@ -1,4 +1,4 @@
-#include "NBC_Pawn.h"
+ï»¿#include "NBC_Pawn.h"
 #include "NBC_PlayerController.h"
 #include "NBC_AnimInstance.h"
 #include "EnhancedInputComponent.h"
@@ -11,73 +11,76 @@ ANBC_Pawn::ANBC_Pawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Capsule º¯¼ö ÃÊ±âÈ­
+	// Capsule ë³€ìˆ˜ ì´ˆê¸°í™”
 	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("RootCapsule"));
 	Capsule->SetCapsuleHalfHeight(92.0f);
 	Capsule->SetCapsuleRadius(23.0f);
 
-	// ·çÆ® ÄÄÆ÷³ÍÆ® ¼³Á¤
+	// ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ ì„¤ì •
 	SetRootComponent(Capsule);
 
-	// ½ºÄÌ·¹Å» ¸Ş½Ã ÄÄÆ÷³ÍÆ®
+	// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ ì»´í¬ë„ŒíŠ¸
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	SkeletalMeshComp->SetupAttachment(Capsule);
 
-	// ½ºÄÌ·¹Å» ¸Ş½Ã ÄÄÆ÷³ÍÆ® ¾Ö¼Â ¼³Á¤
+	// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ ì»´í¬ë„ŒíŠ¸ ì• ì…‹ ì„¤ì •
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshAsset(TEXT("/Game/Resources/Characters/Meshes/SKM_Manny.SKM_Manny"));
 	if (MeshAsset.Succeeded())
 	{
 		SkeletalMeshComp->SetSkeletalMesh(MeshAsset.Object);
 	}
 
-	// ½ºÄÌ·¹Å» ¸Ş½Ã ÄÄÆ÷³ÍÆ® Æ®·£½ºÆû º¯È¯
+	// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ ì»´í¬ë„ŒíŠ¸ íŠ¸ëœìŠ¤í¼ ë³€í™˜
 	SkeletalMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	SkeletalMeshComp->SetRelativeRotation(FRotator(0.0f, -90.f, 0.0f));
 
 	bUseControllerRotationYaw = true;
 
-	// ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ ÇÒ´ç
+	// ì»´í¬ë„ŒíŠ¸ í¬ì¸í„° í• ë‹¹
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	// Root¿¡ SpringArm ºÎÂø
+	// Rootì— SpringArm ë¶€ì°©
 	SpringArmComp->SetupAttachment(RootComponent);
-	SpringArmComp->TargetArmLength = 300.0f; // ½ºÇÁ¸µ¾ÏÀÇ ±æÀÌ
+	SpringArmComp->TargetArmLength = 300.0f; // ìŠ¤í”„ë§ì•”ì˜ ê¸¸ì´
 	SpringArmComp->bUsePawnControlRotation = false;
 
-	// Ä«¸Ş¶ó À§Ä¡ Á¶Á¤
+	// ì¹´ë©”ë¼ ìœ„ì¹˜ ì¡°ì •
 	SpringArmComp->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
-	// ¾î±ú À§·Î Ä«¸Ş¶ó À§Ä¡ Á¶Á¤
+	// ì–´ê¹¨ ìœ„ë¡œ ì¹´ë©”ë¼ ìœ„ì¹˜ ì¡°ì •
 	SpringArmComp->SocketOffset = FVector(0.0f, 0.0f, 35.0f);
 
-	// ÄÄÆ÷³ÍÆ® Æ÷ÀÎÅÍ ÇÒ´ç
+	// ì»´í¬ë„ŒíŠ¸ í¬ì¸í„° í• ë‹¹
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	// Camera´Â SpringArm¿¡ ºÎÂø
-	// µÎ ¹øÂ° ÀÎÀÚ·Î ÇØ´ç ÄÄÆ÷³ÍÆ®ÀÇ Æ¯Á¤ ¼ÒÄÏ ÁöÁ¤ °¡´É
-	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName); // SocketName = SpringArmÀÇ ³¡ ºÎºĞ
-	CameraComp->bUsePawnControlRotation = false; // ½ºÇÁ¸µ¾Ï¸¸ È¸Àü, Ä«¸Ş¶ó´Â °íÁ¤
+	// CameraëŠ” SpringArmì— ë¶€ì°©
+	// ë‘ ë²ˆì§¸ ì¸ìë¡œ í•´ë‹¹ ì»´í¬ë„ŒíŠ¸ì˜ íŠ¹ì • ì†Œì¼“ ì§€ì • ê°€ëŠ¥
+	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName); // SocketName = SpringArmì˜ ë ë¶€ë¶„
+	CameraComp->bUsePawnControlRotation = false; // ìŠ¤í”„ë§ì•”ë§Œ íšŒì „, ì¹´ë©”ë¼ëŠ” ê³ ì •
 
-	// ¸â¹ö º¯¼ö Initialize
+	// ë©¤ë²„ ë³€ìˆ˜ Initialize
 	Acceleration = 1000.f;
 	NormalSpeed = 600.f;
 	MaxWalkSpeed = NormalSpeed;
-	CurrentPlaneSpeed = MaxWalkSpeed;
+	CurrentPlaneSpeed = 0.f;
 	RotationSensitivity = 1.2f;
 	SprintSpeedMultiplier = 1.5f;
 	SprintSpeed = MaxWalkSpeed * SprintSpeedMultiplier;
+	JumpImpulse = 600.f;
 	PreviousLocation = FVector(0.0f, 0.0f, -90.0f);
+	bIsInAir = false;
+
 }
 
 void ANBC_Pawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// ·çÆ® ÄÄÆ÷³ÍÆ® ¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­
+	// ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”
 	UPrimitiveComponent* RootComp = Cast<UPrimitiveComponent>(GetRootComponent());
 	if (RootComp)
 	{
 		RootComp->SetSimulatePhysics(false);
 	}
 
-	// ½ºÄÌ·¹Å» ¸Ş½¬ ÄÄÆ÷³ÍÆ® ¹°¸® ½Ã¹Ä·¹ÀÌ¼Ç ºñÈ°¼ºÈ­
+	// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‰¬ ì»´í¬ë„ŒíŠ¸ ë¬¼ë¦¬ ì‹œë®¬ë ˆì´ì…˜ ë¹„í™œì„±í™”
 	USkeletalMeshComponent* SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
 	if (SkeletalMesh)
 	{
@@ -90,36 +93,36 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// EnhancedInputComponent Ä³½ºÆÃ
+	// EnhancedInputComponent ìºìŠ¤íŒ…
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// ÇöÀç Ä³¸¯ÅÍ¸¦ Á¶ÀÛÇÏ´Â GetController()¸¦ °¡Á®¿Í
-		// Á÷Á¢ ±¸ÇöÇÑ PlayerController Å¬·¡½º·Î Ä³½ºÆÃ
+		// í˜„ì¬ ìºë¦­í„°ë¥¼ ì¡°ì‘í•˜ëŠ” GetController()ë¥¼ ê°€ì ¸ì™€
+		// ì§ì ‘ êµ¬í˜„í•œ PlayerController í´ë˜ìŠ¤ë¡œ ìºìŠ¤íŒ…
 		if (ANBC_PlayerController* PlayerController = Cast<ANBC_PlayerController>(GetController()))
 		{
-			// PlayerControlloerÀÇ MoveAction °¡Á®¿À±â
+			// PlayerControlloerì˜ MoveAction ê°€ì ¸ì˜¤ê¸°
 			if (PlayerController->MoveAction)
 			{
-				// Input Action ¹ÙÀÎµù (ÀÌº¥Æ®¿Í ÇÔ¼ö ¿¬°áÇÏ´Â ÇÙ½É ÄÚµå)
+				// Input Action ë°”ì¸ë”© (ì´ë²¤íŠ¸ì™€ í•¨ìˆ˜ ì—°ê²°í•˜ëŠ” í•µì‹¬ ì½”ë“œ)
 				EnhancedInput->BindAction(
-					PlayerController->MoveAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Triggered,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Triggered,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_Pawn::MoveForward		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_Pawn::MoveForward		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 
 				EnhancedInput->BindAction(
-					PlayerController->MoveAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Triggered,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Triggered,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_Pawn::MoveRight		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_Pawn::MoveRight		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 
 				EnhancedInput->BindAction(
-					PlayerController->MoveAction,	// IA °¡Á®¿À±â
-					ETriggerEvent::Completed,		// Æ®¸®°Å ÀÌº¥Æ®
+					PlayerController->MoveAction,	// IA ê°€ì ¸ì˜¤ê¸°
+					ETriggerEvent::Completed,		// íŠ¸ë¦¬ê±° ì´ë²¤íŠ¸
 					this,
-					&ANBC_Pawn::StopMove		// È£ÃâµÇ´Â ÇÔ¼ö
+					&ANBC_Pawn::StopMove		// í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜
 				);
 			}
 
@@ -133,7 +136,6 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 				);
 			}
 
-#ifdef JUMPING
 			if (PlayerController->JumpAction)
 			{
 				EnhancedInput->BindAction(
@@ -145,12 +147,11 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 				EnhancedInput->BindAction(
 					PlayerController->JumpAction,
-					ETriggerEvent::Completed,		// Å° ÀÔ·ÂÀÌ ³¡³µÀ» ¶§
+					ETriggerEvent::Completed,		// í‚¤ ì…ë ¥ì´ ëë‚¬ì„ ë•Œ
 					this,
 					&ANBC_Pawn::StopJump
 				);
 			}
-#endif
 
 			if (PlayerController->SprintAction)
 			{
@@ -176,35 +177,33 @@ void ANBC_Pawn::MoveForward(const FInputActionValue& value)
 {
 	if (!Controller) return;
 
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const FVector2D MoveInput = value.Get<FVector2D>();
 
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		// °¡¼Ó Àû¿ë: ÀÔ·Â¿¡ µû¶ó ¼Óµµ Áõ°¡
+		// ê³µì¤‘ì—ì„œ ì´ë™ ì†ë„ ì œí•œ
+		float MaxSpeed = bIsInAir ? MaxWalkSpeed * 0.4f : MaxWalkSpeed;
+		// ê°€ì† ì ìš©
 		CurrentPlaneSpeed = FMath::Min(CurrentPlaneSpeed + Acceleration * GetWorld()->GetDeltaSeconds(), MaxWalkSpeed);
 
-		// ActorÀÇ Forward º¤ÅÍ »ç¿ë
+		// Actorì˜ Forward ë²¡í„° ì‚¬ìš©
 		FVector ForwardVector = GetActorForwardVector();
-		// Æò¸é ÀÌµ¿À» À§ÇÑ ZÃà Á¦°Å
+		// í‰ë©´ ì´ë™ì„ ìœ„í•œ Zì¶• ì œê±°
 		ForwardVector.Z = 0;
-		// º¤ÅÍ Á¤±ÔÈ­
+		// ë²¡í„° ì •ê·œí™”
 		ForwardVector.Normalize();
 
-		// ¿ùµå ±âÁØ º¤ÅÍ¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+		// ì›”ë“œ ê¸°ì¤€ ë²¡í„°ë¥¼ ë¡œì»¬ ì¢Œí‘œê³„ë¡œ ë³€í™˜
 		FVector LocalForward = GetActorTransform().InverseTransformVector(ForwardVector);
 
-		// ÀÌµ¿ ¹æÇâ ¼³Á¤
+		// ì´ë™ ë°©í–¥ ì„¤ì •
 		FVector Direction = (LocalForward * MoveInput.X).GetSafeNormal();
 
-		// °øÁß¿¡¼­ ÀÌµ¿ ¼Óµµ Á¦ÇÑ
-		float SpeedMultiplier = bIsInAir ? 0.4f : 1.0f;
-		CurrentPlaneSpeed *= SpeedMultiplier;
-
-		// XÃà ÀÌµ¿
+		// Xì¶• ì´ë™
 		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
 		
-		// ½ºÄÌ·¹Å» ¸Ş½Ã È¸Àü
+		// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ íšŒì „
 		ApplyCharacterRotation(MoveInput.X * 90.0f - 90.0f);
 	}
 }
@@ -213,48 +212,46 @@ void ANBC_Pawn::MoveRight(const FInputActionValue& value)
 {
 	if (!Controller) return;
 
-	// ÀÔ·Â °ª °¡Á®¿À±â
+	// ì…ë ¥ ê°’ ê°€ì ¸ì˜¤ê¸°
 	const FVector2D MoveInput = value.Get<FVector2D>();
 
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
-		// °¡¼Ó Àû¿ë: ÀÔ·Â¿¡ µû¶ó ¼Óµµ Áõ°¡
+		// ê³µì¤‘ì—ì„œ ì´ë™ ì†ë„ ì œí•œ
+		float MaxSpeed = bIsInAir ? MaxWalkSpeed * 0.4f : MaxWalkSpeed;
+		// ê°€ì† ì ìš©
 		CurrentPlaneSpeed = FMath::Min(CurrentPlaneSpeed + Acceleration * GetWorld()->GetDeltaSeconds(), MaxWalkSpeed);
 
-		// Ä«¸Ş¶óÀÇ Right º¤ÅÍ »ç¿ë
+		// ì¹´ë©”ë¼ì˜ Right ë²¡í„° ì‚¬ìš©
 		FVector RightVector = GetActorRightVector();
-		// Æò¸é ÀÌµ¿À» À§ÇÑ ZÃà Á¦°Å
+		// í‰ë©´ ì´ë™ì„ ìœ„í•œ Zì¶• ì œê±°
 		RightVector.Z = 0;
-		// º¤ÅÍ Á¤±ÔÈ­
+		// ë²¡í„° ì •ê·œí™”
 		RightVector.Normalize();
 
-		// ¿ùµå ±âÁØ º¤ÅÍ¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+		// ì›”ë“œ ê¸°ì¤€ ë²¡í„°ë¥¼ ë¡œì»¬ ì¢Œí‘œê³„ë¡œ ë³€í™˜
 		FVector LocalRight = GetActorTransform().InverseTransformVector(RightVector);
 
-		// ÀÌµ¿ ¹æÇâ ¼³Á¤
+		// ì´ë™ ë°©í–¥ ì„¤ì •
 		FVector Direction = (LocalRight * MoveInput.Y).GetSafeNormal();
 
-		// °øÁß¿¡¼­ ÀÌµ¿ ¼Óµµ Á¦ÇÑ
-		float SpeedMultiplier = bIsInAir ? 0.4f : 1.0f;
-		CurrentPlaneSpeed *= SpeedMultiplier;
-
-		// YÃà ÀÌµ¿
+		// Yì¶• ì´ë™
 		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
 
-		// ½ºÄÌ·¹Å» ¸Ş½Ã È¸Àü
+		// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ íšŒì „
 		ApplyCharacterRotation(MoveInput.Y * 90.0f);
 	}
 }
 
 void ANBC_Pawn::ApplyCharacterRotation(float TargetYaw)
 {
-	// ½ºÄÌ·¹Å» ¸Ş½¬ ±âº» ¹æÇâ¿¡ ¸ÂÃç º¸Á¤
+	// ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‰¬ ê¸°ë³¸ ë°©í–¥ì— ë§ì¶° ë³´ì •
 	const float BaseRotationOffset = -90.0f;
 	TargetYaw += BaseRotationOffset;
 
 	FRotator CurrentRotation = SkeletalMeshComp->GetRelativeRotation();
 
-	// ÃÖ´Ü È¸Àü ¹æÇâ °è»ê
+	// ìµœë‹¨ íšŒì „ ë°©í–¥ ê³„ì‚°
 	float DeltaYaw = FMath::UnwindDegrees(TargetYaw - CurrentRotation.Yaw);	
 	float NewYaw = FMath::FInterpTo(CurrentRotation.Yaw, CurrentRotation.Yaw + DeltaYaw, GetWorld()->GetDeltaSeconds(), 5.0f);
 
@@ -270,45 +267,44 @@ void ANBC_Pawn::StopMove(const FInputActionValue& value)
 
 void ANBC_Pawn::Look(const FInputActionValue& value)
 {
-	// À¯È¿¼º °Ë»ç
+	// ìœ íš¨ì„± ê²€ì‚¬
 	if (!SpringArmComp && !Controller) return;
 
-	// ¸¶¿ì½º ÀÌµ¿¿¡ ÀÇÇÑ X, Y È¸Àü ÀÔ·Â °ª
+	// ë§ˆìš°ìŠ¤ ì´ë™ì— ì˜í•œ X, Y íšŒì „ ì…ë ¥ ê°’
 	FVector2D LookInput = value.Get<FVector2D>();
 
-	// Yaw È¸Àü (ÁÂ¿ì È¸Àü) - Ä«¸Ş¶ó ¹æÇâ ±âÁØ
+	// Yaw íšŒì „ (ì¢Œìš° íšŒì „) - ì¹´ë©”ë¼ ë°©í–¥ ê¸°ì¤€
 	FRotator NewControlRotation = Controller->GetControlRotation();
 	NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
 
-	// ControlRotation Àû¿ë
+	// ControlRotation ì ìš©
 	Controller->SetControlRotation(NewControlRotation);
 
-	// Pitch È¸Àü (»óÇÏ È¸Àü) - SpringArm¿¡ Àû¿ë
+	// Pitch íšŒì „ (ìƒí•˜ íšŒì „) - SpringArmì— ì ìš©
 	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
 	SpringArmRotation.Pitch = FMath::Clamp(SpringArmRotation.Pitch - LookInput.Y * RotationSensitivity, -85.0f, 85.0f);
 
-	// SpringArm È¸Àü Àû¿ë
+	// SpringArm íšŒì „ ì ìš©
 	SpringArmComp->SetRelativeRotation(SpringArmRotation);
 }
 
-#ifdef JUMPING
 void ANBC_Pawn::StartJump(const FInputActionValue& value)
 {
-	// ÀÔ·Â °ª °¡Á®¿À±â
-	if (value.Get<bool>())
-	{
-		Jump();
-	}
+    if (value.Get<bool>() && !bIsInAir)
+    {
+        VerticalVelocity = JumpImpulse;
+        bIsInAir = true; // ì í”„ ìƒíƒœë¡œ ë³€ê²½
+
+        // ìºë¦­í„°ë¥¼ ì‚´ì§ ìœ„ë¡œ ì´ë™í•˜ì—¬ ì¦‰ì‹œ ê³µì¤‘ìœ¼ë¡œ ë§Œë“¤ê¸°
+        FVector NewLocation = GetActorLocation();
+        NewLocation.Z += 1.0f;
+        SetActorLocation(NewLocation);
+    }
 }
 
 void ANBC_Pawn::StopJump(const FInputActionValue& value)
 {
-	if (!value.Get<bool>())
-	{
-		StopJumping();
-	}
 }
-#endif
 
 void ANBC_Pawn::StartSprint(const FInputActionValue& value)
 {
@@ -327,13 +323,13 @@ void ANBC_Pawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Áß·Â ¹× ³«ÇÏ Ã³¸®
+	// ì¤‘ë ¥ ë° ë‚™í•˜ ì²˜ë¦¬
 	if (!IsGrounded())
 	{
-		// Áß·Â Àû¿ë (ZÃà ¼Óµµ Áõ°¡)
+		// ì¤‘ë ¥ ì ìš© (Zì¶• ì†ë„ ì¦ê°€)
 		VerticalVelocity += Gravity * DeltaTime;
 
-		// ÀÌµ¿
+		// ì´ë™
 		FVector NewLocation = GetActorLocation();
 		NewLocation.Z += VerticalVelocity * DeltaTime;
 		SetActorLocation(NewLocation);
@@ -342,7 +338,7 @@ void ANBC_Pawn::Tick(float DeltaTime)
 	}
 	else
 	{
-		// ÂøÁö
+		// ì°©ì§€
 		if (bIsInAir)
 		{
 			VerticalVelocity = 0.f;
@@ -350,60 +346,61 @@ void ANBC_Pawn::Tick(float DeltaTime)
 		}
 	}
 
-	// ¾Ö´Ï¸ŞÀÌ¼Ç ¹× ¿¡¾îÄÁÆ®·Ñ
+	// ì• ë‹ˆë©”ì´ì…˜ ë° ì—ì–´ì»¨íŠ¸ë¡¤
 	UpdateMovementSpeed();
 }
 
 FVector ANBC_Pawn::GetVelocity()	
 {
-	// ÇöÀç À§Ä¡¿Í ÀÌÀü À§Ä¡¸¦ ±â¹İÀ¸·Î ¼Óµµ °è»ê
+	// í˜„ì¬ ìœ„ì¹˜ì™€ ì´ì „ ìœ„ì¹˜ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì†ë„ ê³„ì‚°
 	FVector CurrentLocation = GetActorLocation();
-	FVector DeltaLocation = CurrentLocation - PreviousLocation;  // ÀÌÀü À§Ä¡ ÀúÀå
-	PreviousLocation = CurrentLocation;  // ÀÌÀü À§Ä¡ ¾÷µ¥ÀÌÆ®
+	FVector DeltaLocation = CurrentLocation - PreviousLocation;  // ì´ì „ ìœ„ì¹˜ ì €ì¥
+	PreviousLocation = CurrentLocation;  // ì´ì „ ìœ„ì¹˜ ì—…ë°ì´íŠ¸
 
-	// ¼Óµµ¸¦ ÇÁ·¹ÀÓ´ç ÀÌµ¿ °Å¸®·Î °è»ê
+	// ì†ë„ë¥¼ í”„ë ˆì„ë‹¹ ì´ë™ ê±°ë¦¬ë¡œ ê³„ì‚°
 	return DeltaLocation / GetWorld()->GetDeltaSeconds();
 }
 
 void ANBC_Pawn::UpdateMovementSpeed()
 {
-	// ÇöÀç ¼Óµµ °¡Á®¿À±â
+	// í˜„ì¬ ì†ë„ ê°€ì ¸ì˜¤ê¸°
 	FVector CurrentVelocity = GetVelocity();
-	float CurrentSpeed = CurrentVelocity.Size();
 
-	// ¾Ö´Ï¸ŞÀÌ¼Ç ÀÎ½ºÅÏ½º ÂüÁ¶ °¡Á®¿À±â
+	// ì• ë‹ˆë©”ì´ì…˜ ì¸ìŠ¤í„´ìŠ¤ ì°¸ì¡° ê°€ì ¸ì˜¤ê¸°
 	UAnimInstance* AnimInstance = SkeletalMeshComp->GetAnimInstance();
 
-	// ¾Ö´Ï¸ŞÀÌ¼Ç ÀÎ½ºÅÏ½º¸¦ ¿Ã¹Ù¸¥ Å¸ÀÔÀ¸·Î Ä³½ºÆÃ (ABP_NBC¿¡ ¸Â°Ô)
+	// ì• ë‹ˆë©”ì´ì…˜ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ì˜¬ë°”ë¥¸ íƒ€ì…ìœ¼ë¡œ ìºìŠ¤íŒ… (ABP_NBCì— ë§ê²Œ)
 	if (AnimInstance)
 	{
 		UNBC_AnimInstance* NBC_AnimInstance = Cast<UNBC_AnimInstance>(AnimInstance);
 		if (NBC_AnimInstance)
 		{
-			// ÀÌµ¿ ¼Óµµ¿Í »óÅÂ¸¦ ¾Ö´Ï¸ŞÀÌ¼Ç ºí·çÇÁ¸°Æ®·Î Àü´Ş
-			NBC_AnimInstance->Velocity = CurrentSpeed;
-			NBC_AnimInstance->IsMoving = (!FMath::IsNearlyZero(CurrentSpeed)); // ÀÌµ¿ ÁßÀÌ¸é true, ¾Æ´Ï¸é false
+			// ì´ë™ ì†ë„ì™€ ìƒíƒœë¥¼ ì• ë‹ˆë©”ì´ì…˜ ë¸”ë£¨í”„ë¦°íŠ¸ë¡œ ì „ë‹¬
+			NBC_AnimInstance->Velocity = CurrentVelocity;
+			NBC_AnimInstance->GroundSpeed = CurrentPlaneSpeed;
+			NBC_AnimInstance->IsMoving = (!FMath::IsNearlyZero(CurrentPlaneSpeed)); // ì´ë™ ì¤‘ì´ë©´ true, ì•„ë‹ˆë©´ false
+			NBC_AnimInstance->IsFalling = bIsInAir; // ê³µì¤‘ì— ìˆìœ¼ë©´ true, ì•„ë‹ˆë©´ false
 		}
 	}
 }
 
 bool ANBC_Pawn::IsGrounded()
 {
-	// Ä¸½¶ Ãæµ¹ ÄÄÆ÷³ÍÆ®ÀÇ ¹Ù´Ú È®ÀÎ
-	FVector CapsuleBottom = Capsule->GetComponentLocation() - FVector(0.0f, 0.0f, Capsule->GetScaledCapsuleHalfHeight());
+	// ìº¡ìŠ ì¶©ëŒ ì»´í¬ë„ŒíŠ¸ì˜ ë°”ë‹¥ í™•ì¸
+	FVector CapsuleBottom = Capsule->GetComponentLocation() - FVector(0.0f, 0.0f, Capsule->GetScaledCapsuleHalfHeight() - 5.f);
 	
 	FHitResult HitResult;
 	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this); // ÀÚ½ÅÀ» Á¦¿ÜÇÑ ´Ù¸¥ ¿ÀºêÁ§Æ®¿ÍÀÇ Ãæµ¹ Ã¼Å©
+	CollisionParams.AddIgnoredActor(this); // ìì‹ ì„ ì œì™¸í•œ ë‹¤ë¥¸ ì˜¤ë¸Œì íŠ¸ì™€ì˜ ì¶©ëŒ ì²´í¬
 
-	// Sweep Ã¼Å©·Î Áö¸é°úÀÇ Ãæµ¹ ¿©ºÎ È®ÀÎ
+	// Sweep ì²´í¬ë¡œ ì§€ë©´ê³¼ì˜ ì¶©ëŒ ì—¬ë¶€ í™•ì¸
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		CapsuleBottom,
-		CapsuleBottom - FVector(0.0f, 0.0f, 10.0f), // »ìÂ¦ ¾Æ·¡·Î Sweep
+		CapsuleBottom - FVector(0.0f, 0.0f, 10.0f), // ì‚´ì§ ì•„ë˜ë¡œ Sweep
 		FQuat::Identity,
-		ECC_Visibility, // Ãæµ¹ Ã¤³Î ¼³Á¤
-		FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius()), // CapsuleÀÇ ¹İÁö¸§À» »ç¿ë
+		ECC_WorldStatic, // ì¶©ëŒ ì±„ë„ ì„¤ì •
+		FCollisionShape::MakeSphere(Capsule->GetScaledCapsuleRadius()), // Capsuleì˜ ë°˜ì§€ë¦„ì„ ì‚¬ìš©
 		CollisionParams
 	);
 

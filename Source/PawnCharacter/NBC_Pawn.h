@@ -47,6 +47,8 @@ public:
 	float SprintSpeedMultiplier;
 	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "NBC_Pawn|Movements")
 	float SprintSpeed;
+	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "NBC_Pawn|Movements")
+	float JumpImpulse;
 
 protected:
 	virtual void BeginPlay() override;
@@ -66,11 +68,10 @@ protected:
 	void StopMove(const FInputActionValue& value);
 	UFUNCTION()
 	void Look(const FInputActionValue& value);
-
-#ifdef JUMPING
+	UFUNCTION()
 	void StartJump(const FInputActionValue& value);
+	UFUNCTION()
 	void StopJump(const FInputActionValue& value);
-#endif
 	UFUNCTION()
 	void StartSprint(const FInputActionValue& value);
 	UFUNCTION()

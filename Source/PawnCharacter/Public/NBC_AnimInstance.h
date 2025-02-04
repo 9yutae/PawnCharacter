@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
@@ -10,11 +10,17 @@ class PAWNCHARACTER_API UNBC_AnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
-    // ¾Ö´Ï¸ŞÀÌ¼Ç ÆÄ¶ó¹ÌÅÍµé
+    // ì• ë‹ˆë©”ì´ì…˜ íŒŒë¼ë¯¸í„°ë“¤
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-    float Velocity;
+    FVector Velocity;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+    float GroundSpeed;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
     bool IsMoving;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+    bool IsFalling;
 
 };
