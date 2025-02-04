@@ -42,6 +42,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BluePrintReadOnly, Category = "NBC_UAV|Movement")
 	float TerminalSpeed; // 종단 속도
 
+	UFUNCTION()
+	void OnUAVHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+		const FHitResult& Hit);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -60,6 +65,9 @@ private:
 	void ResetTilt(const FInputActionValue& Value);
 	void StartHover(const FInputActionValue& Value);
 	void StopHover(const FInputActionValue& Value);
+
+	FVector InitialPosition;
+	FRotator InitialRotation;
 
 	bool bResetTiltRequested;
 	bool isHovering;

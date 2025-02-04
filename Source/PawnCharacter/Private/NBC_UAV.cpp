@@ -2,6 +2,7 @@
 #include "NBC_UAVController.h"
 #include "EnhancedInputComponent.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
@@ -13,8 +14,17 @@ ANBC_UAV::ANBC_UAV()
 	Box = CreateDefaultSubobject<UBoxComponent>(TEXT("RootCapsule"));
 	Box->SetBoxExtent(FVector(100.f, 100.f, 25.f));
 
+	// 충돌 관련 설정
+	Box->SetNotifyRigidBodyCollision(true); // 충돌 이벤트 활성화
+	Box->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Box->SetCollisionObjectType(ECC_PhysicsBody);
+	Box->SetCollisionResponseToAllChannels(ECR_Block);
+
 	// 루트 컴포넌트 설정
 	SetRootComponent(Box);
+
+	// 충돌 이벤트 바인딩
+	Box->OnComponentHit.AddDynamic(this, &ANBC_UAV::OnUAVHit);
 
 	// 스태틱 메시 컴포넌트
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
@@ -58,6 +68,8 @@ ANBC_UAV::ANBC_UAV()
 	CameraComp->bUsePawnControlRotation = false; // 스프링암만 회전, 카메라는 고정
 
 	// 초기 값 설정
+	InitialPosition = FVector(0.f, 0.f, 32.f);
+	InitialRotation = FRotator::ZeroRotator;
 	CurrentVelocity = FVector::ZeroVector;
 	MaxSpeed = 1000.f;
 	RotationSensitivity = 1.2f;
@@ -70,6 +82,37 @@ void ANBC_UAV::BeginPlay()
 {
 	Super::BeginPlay();
 
+}
+
+// 충돌 처리
+void ANBC_UAV::OnUAVHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	// 충돌 시 정지 (비활성화)
+	SetActorTickEnabled(false);
+	Box->SetPhysicsLinearVelocity(FVector::ZeroVector); // 속도를 0으로 설정
+	Box->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector); // 각속도를 0으로 설정
+
+	// 바닥과 접촉 여부 확인
+	bool bIsGrounded = false;
+	FVector Start = GetActorLocation();
+	FVector End = Start - FVector(0, 0, 10.0f);
+
+	FHitResult GroundHit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(GroundHit, Start, End, ECC_Visibility, Params))
+	{
+		bIsGrounded = true;
+	}
+
+	// 바닥이 아니라면 초기 위치로 리셋
+	if (!bIsGrounded)
+	{
+		SetActorLocation(InitialPosition);
+		SetActorRotation(InitialRotation);
+		SetActorTickEnabled(true); // 다시 활성화
+	}
 }
 
 void ANBC_UAV::Tick(float DeltaTime)
