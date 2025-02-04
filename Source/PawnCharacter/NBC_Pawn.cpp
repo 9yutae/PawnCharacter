@@ -222,8 +222,8 @@ void ANBC_Pawn::MoveRight(const FInputActionValue& value)
 
 void ANBC_Pawn::Look(const FInputActionValue& value)
 {
-	// SpringArmComponent 유효성 검사
-	if (!SpringArmComp) return;
+	// 유효성 검사
+	if (!SpringArmComp && !Controller) return;
 
 	// 마우스 이동에 의한 X, Y 회전 입력 값
 	FVector2D LookInput = value.Get<FVector2D>();
