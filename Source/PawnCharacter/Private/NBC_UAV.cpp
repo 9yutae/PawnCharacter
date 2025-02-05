@@ -383,6 +383,9 @@ void ANBC_UAV::Turn(const FInputActionValue& Value)
 		// 우클릭 중이 아닐 때는 컨트롤러 자체 회전
 		FRotator NewControlRotation = Controller->GetControlRotation();
 		NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
+
+		// ControlRotation 적용
+		Controller->SetControlRotation(NewControlRotation);
 	}
 	else
 	{
