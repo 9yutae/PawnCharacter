@@ -74,7 +74,8 @@ ANBC_UAV::ANBC_UAV()
 	MaxSpeed = 1000.f;
 	RotationSensitivity = 1.2f;
 	bResetTiltRequested = false;
-	isHovering = false;
+	bIsRightClicking = false;
+	bShouldInterpBack = false;
 	TerminalSpeed = sqrt(AirResistance * Gravity * GetActorScale().Z);
 }
 
@@ -82,6 +83,7 @@ void ANBC_UAV::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitialCameraRotation = SpringArmComp->GetRelativeRotation();
 }
 
 // 충돌 처리
@@ -148,12 +150,19 @@ void ANBC_UAV::Tick(float DeltaTime)
 		Controller->SetControlRotation(NewControlRotation);
 	}
 
-	// H키 입력 시 Hovering
-	/*
-	if (!isHovering)
+	// 마우스 우클릭 해제 시 카메라 원위치
+	if (bShouldInterpBack)
 	{
+		FRotator CurrentRotation = SpringArmComp->GetRelativeRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, InitialCameraRotation, DeltaTime, 5.0f);
+		SpringArmComp->SetRelativeRotation(NewRotation);
+
+		// 목표 회전에 도달하면 보간 중지
+		if (NewRotation.Equals(InitialCameraRotation, 0.1f))
+		{
+			bShouldInterpBack = false;
+		}
 	}
-	*/
 }
 
 void ANBC_UAV::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -237,20 +246,20 @@ void ANBC_UAV::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 				);
 			}
 
-			if (PlayerController->HoverAction)
+			if (PlayerController->RightClickAction)
 			{
 				EnhancedInput->BindAction(
-					PlayerController->HoverAction,
+					PlayerController->RightClickAction,
 					ETriggerEvent::Triggered,
 					this,
-					&ANBC_UAV::StartHover
+					&ANBC_UAV::OnRightClickStart
 				);
 
 				EnhancedInput->BindAction(
-					PlayerController->HoverAction,
+					PlayerController->RightClickAction,
 					ETriggerEvent::Completed,
 					this,
-					&ANBC_UAV::StopHover
+					&ANBC_UAV::OnRightClickStop
 				);
 			}
 		}
@@ -365,15 +374,23 @@ void ANBC_UAV::Turn(const FInputActionValue& Value)
 	// 마우스 이동에 의한 X, Y 회전 입력 값
 	FVector2D LookInput = Value.Get<FVector2D>();
 
-	// Yaw 회전 (좌우 회전) - 카메라 방향 기준
-	FRotator NewControlRotation = Controller->GetControlRotation();
-	NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
+	// 스프링암 회전 값 가져오기
+	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
 
-	// ControlRotation 적용
-	Controller->SetControlRotation(NewControlRotation);
+	// Yaw 회전 (좌우 회전)
+	if (!bIsRightClicking)
+	{
+		// 우클릭 중이 아닐 때는 컨트롤러 자체 회전
+		FRotator NewControlRotation = Controller->GetControlRotation();
+		NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
+	}
+	else
+	{
+		// 우클릭 중일 때 스프링암 회전
+		SpringArmRotation.Yaw += LookInput.X * RotationSensitivity;
+	}
 
 	// Pitch 회전 (상하 회전) - SpringArm에 적용
-	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
 	SpringArmRotation.Pitch = FMath::Clamp(SpringArmRotation.Pitch - LookInput.Y * RotationSensitivity, -85.0f, 85.0f);
 
 	// SpringArm 회전 적용
@@ -401,17 +418,20 @@ void ANBC_UAV::ResetTilt(const FInputActionValue& Value)
 	bResetTiltRequested = true;
 }
 
-void ANBC_UAV::StartHover(const FInputActionValue& Value)
+void ANBC_UAV::OnRightClickStart(const FInputActionValue& Value)
 {
-	if (!Controller) return;
-
 	if (Value.Get<float>())
 	{
-		isHovering = true;
+		bIsRightClicking = true;
+		bShouldInterpBack = false;
 	}
 }
 
-void ANBC_UAV::StopHover(const FInputActionValue& Value)
+void ANBC_UAV::OnRightClickStop(const FInputActionValue& Value)
 {
-	isHovering = false;
+	if (!Value.Get<float>())
+	{
+		bIsRightClicking = false;
+		bShouldInterpBack = true;
+	}
 }

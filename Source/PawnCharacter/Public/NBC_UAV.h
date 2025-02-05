@@ -63,14 +63,16 @@ private:
 	void Turn(const FInputActionValue& Value);
 	void Tilt(const FInputActionValue& Value);
 	void ResetTilt(const FInputActionValue& Value);
-	void StartHover(const FInputActionValue& Value);
-	void StopHover(const FInputActionValue& Value);
+	void OnRightClickStart(const FInputActionValue& Value);
+	void OnRightClickStop(const FInputActionValue& Value);
 
 	FVector InitialPosition;
 	FRotator InitialRotation;
+	FRotator InitialCameraRotation;
 
 	bool bResetTiltRequested;
-	bool isHovering;
+	bool bIsRightClicking;
+	bool bShouldInterpBack;
 	const float Gravity = 9.8f; // 중력 가속도
 	const float AirResistance = 10.67;
 };

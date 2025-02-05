@@ -76,6 +76,10 @@ protected:
 	void StartSprint(const FInputActionValue& value);
 	UFUNCTION()
 	void StopSprint(const FInputActionValue& value);
+	UFUNCTION()
+	void OnRightClickStart(const FInputActionValue& Value);
+	UFUNCTION()
+	void OnRightClickStop(const FInputActionValue& Value);
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -85,6 +89,9 @@ public:
 
 private:
 	FVector PreviousLocation;
+	FRotator InitialCameraRotation;
+	bool bIsRightClicking;
+	bool bShouldInterpBack;
 
 	// 중력 관련 변수
 	const float Gravity = -980.f; // 중력 가속도 (cm/s^2)

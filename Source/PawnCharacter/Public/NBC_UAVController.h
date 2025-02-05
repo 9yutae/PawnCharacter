@@ -31,7 +31,7 @@ public:
 	UInputAction* TiltAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* HoverAction;
+	UInputAction* RightClickAction;
 
 protected:
 	void BeginPlay();

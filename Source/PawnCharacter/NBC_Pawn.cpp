@@ -16,6 +16,12 @@ ANBC_Pawn::ANBC_Pawn()
 	Capsule->SetCapsuleHalfHeight(92.0f);
 	Capsule->SetCapsuleRadius(23.0f);
 
+	// 충돌 관련 설정
+	Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Capsule->SetCollisionObjectType(ECC_Pawn);
+	Capsule->SetCollisionResponseToAllChannels(ECR_Block);
+	Capsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+
 	// 루트 컴포넌트 설정
 	SetRootComponent(Capsule);
 
@@ -66,7 +72,8 @@ ANBC_Pawn::ANBC_Pawn()
 	JumpImpulse = 600.f;
 	PreviousLocation = FVector(0.0f, 0.0f, -90.0f);
 	bIsInAir = false;
-
+	bIsRightClicking = false;
+	bShouldInterpBack = false;
 }
 
 void ANBC_Pawn::BeginPlay()
@@ -86,6 +93,8 @@ void ANBC_Pawn::BeginPlay()
 	{
 		SkeletalMesh->SetSimulatePhysics(false);
 	}
+
+	InitialCameraRotation = SpringArmComp->GetRelativeRotation();
 
 }
 
@@ -169,6 +178,23 @@ void ANBC_Pawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 					&ANBC_Pawn::StopSprint
 				);
 			}
+
+			if (PlayerController->RightClickAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->RightClickAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANBC_Pawn::OnRightClickStart
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->RightClickAction,
+					ETriggerEvent::Completed,
+					this,
+					&ANBC_Pawn::OnRightClickStop
+				);
+			}
 		}
 	}
 }
@@ -199,10 +225,17 @@ void ANBC_Pawn::MoveForward(const FInputActionValue& value)
 
 		// 이동 방향 설정
 		FVector Direction = (LocalForward * MoveInput.X).GetSafeNormal();
+		FVector Movement = Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds();
 
-		// X축 이동
-		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
+		// 충돌 검사와 함께 이동
+		FHitResult Hit;
+		AddActorLocalOffset(Movement, true, &Hit);
 		
+		if (Hit.bBlockingHit)
+		{
+			Movement = FVector::ZeroVector;
+		}
+
 		// 스켈레탈 메시 회전
 		ApplyCharacterRotation(MoveInput.X * 90.0f - 90.0f);
 	}
@@ -234,10 +267,17 @@ void ANBC_Pawn::MoveRight(const FInputActionValue& value)
 
 		// 이동 방향 설정
 		FVector Direction = (LocalRight * MoveInput.Y).GetSafeNormal();
+		FVector Movement = Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds();
 
-		// Y축 이동
-		AddActorLocalOffset(Direction * CurrentPlaneSpeed * GetWorld()->GetDeltaSeconds(), true);
+		// 충돌 검사와 함께 이동
+		FHitResult Hit;
+		AddActorLocalOffset(Movement, true, &Hit);
 
+		if (Hit.bBlockingHit)
+		{
+			Movement = FVector::ZeroVector;
+		}
+		
 		// 스켈레탈 메시 회전
 		ApplyCharacterRotation(MoveInput.Y * 90.0f);
 	}
@@ -273,15 +313,24 @@ void ANBC_Pawn::Look(const FInputActionValue& value)
 	// 마우스 이동에 의한 X, Y 회전 입력 값
 	FVector2D LookInput = value.Get<FVector2D>();
 
-	// Yaw 회전 (좌우 회전) - 카메라 방향 기준
-	FRotator NewControlRotation = Controller->GetControlRotation();
-	NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
-
-	// ControlRotation 적용
-	Controller->SetControlRotation(NewControlRotation);
-
-	// Pitch 회전 (상하 회전) - SpringArm에 적용
+	// 스프링암 회전 값 가져오기
 	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
+
+	// Yaw 회전 (좌우 회전)
+	if (!bIsRightClicking)
+	{
+		// 우클릭 중이 아닐 때는 컨트롤러 자체 회전
+		FRotator NewControlRotation = Controller->GetControlRotation();
+		NewControlRotation.Yaw += LookInput.X * RotationSensitivity;
+
+		// ControlRotation 적용
+		Controller->SetControlRotation(NewControlRotation);
+	}
+	else
+	{
+		// 우클릭 중일 때 스프링암 회전
+		SpringArmRotation.Yaw += LookInput.X * RotationSensitivity;
+	}
 	SpringArmRotation.Pitch = FMath::Clamp(SpringArmRotation.Pitch - LookInput.Y * RotationSensitivity, -85.0f, 85.0f);
 
 	// SpringArm 회전 적용
@@ -328,12 +377,6 @@ void ANBC_Pawn::Tick(float DeltaTime)
 	{
 		// 중력 적용 (Z축 속도 증가)
 		VerticalVelocity += Gravity * DeltaTime;
-
-		// 이동
-		FVector NewLocation = GetActorLocation();
-		NewLocation.Z += VerticalVelocity * DeltaTime;
-		SetActorLocation(NewLocation);
-
 		bIsInAir = true;
 	}
 	else
@@ -344,6 +387,33 @@ void ANBC_Pawn::Tick(float DeltaTime)
 			VerticalVelocity = 0.f;
 			bIsInAir = false;
 		}
+	}
+
+	// 마우스 우클릭 해제 시 카메라 원위치
+	if (bShouldInterpBack)
+	{
+		FRotator CurrentRotation = SpringArmComp->GetRelativeRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, InitialCameraRotation, DeltaTime, 5.0f);
+		SpringArmComp->SetRelativeRotation(NewRotation);
+
+		// 목표 회전에 도달하면 보간 중지
+		if (NewRotation.Equals(InitialCameraRotation, 0.1f))
+		{
+			bShouldInterpBack = false;
+		}
+	}
+
+	// 충돌 처리 로직
+	// 이동 계산
+	FVector MoveDelta = FVector(0.f, 0.f, VerticalVelocity * DeltaTime);
+	// 충돌 감지
+	FHitResult Hit;
+	AddActorWorldOffset(MoveDelta, true, &Hit);
+
+	// 위쪽에 막혔을 경우 점프 속도 초기화
+	if (Hit.bBlockingHit && VerticalVelocity > 0)
+	{
+		VerticalVelocity = 0;
 	}
 
 	// 애니메이션 및 에어컨트롤
@@ -405,4 +475,22 @@ bool ANBC_Pawn::IsGrounded()
 	);
 
 	return bHit;
+}
+
+void ANBC_Pawn::OnRightClickStart(const FInputActionValue& Value)
+{
+	if (Value.Get<float>())
+	{
+		bIsRightClicking = true;
+		bShouldInterpBack = false;
+	}
+}
+
+void ANBC_Pawn::OnRightClickStop(const FInputActionValue& Value)
+{
+	if (!Value.Get<float>())
+	{
+		bIsRightClicking = false;
+		bShouldInterpBack = true;
+	}
 }

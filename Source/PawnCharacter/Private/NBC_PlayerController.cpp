@@ -6,7 +6,8 @@ ANBC_PlayerController::ANBC_PlayerController()
       MoveAction(nullptr),
       JumpAction(nullptr),
       LookAction(nullptr),
-      SprintAction(nullptr)
+      SprintAction(nullptr),
+      RightClickAction(nullptr)
 {
 }
 
